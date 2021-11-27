@@ -1,37 +1,116 @@
-
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-      <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>作死现场</title>
-<iframe src="https://player.bilibili.com/player.html?aid=976573974&bvid=BV1t44y1e7Mu&cid=438418479&page=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"> </iframe>
-         <p>-</p>
-<iframe src="https://player.bilibili.com/player.html?aid=549032594&bvid=BV17q4y137s8&cid=438439578&page=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"> </iframe>
-<p>-</p>
-<iframe src="https://player.bilibili.com/player.html?aid=764076225&bvid=BV19r4y1C7qQ&cid=438468759&page=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"> </iframe>
-<p>-</p>
-<iframe src="https://player.bilibili.com/player.html?aid=764044540&bvid=BV1Cr4y1C7vt&cid=438495253&page=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"> </iframe>
-<p>-</p>
-<iframe src="https://player.bilibili.com/player.html?aid=849031872&bvid=BV11L4y1q7hU&cid=438587759&page=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"> </iframe>
-<p>-</p>
-<iframe src="https://player.bilibili.com/player.html?aid=209039118&bvid=BV1kh411t74H&cid=438606707&page=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"> </iframe>
-<p>-</p>
-<iframe src="https://player.bilibili.com/player.html?aid=251507193&bvid=BV1cv411M7C4&cid=438996717&page=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"> </iframe>
-<p>-</p>
-<iframe src="https://player.bilibili.com/player.html?aid=379123919&bvid=BV1bf4y1T7P9&cid=439020101&page=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"> </iframe>
-<p>-</p>
-<iframe src="https://player.bilibili.com/player.html?aid=591537011&bvid=BV1wq4y1k7QP&cid=439145104&page=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"> </iframe>
-<p>-</p>
-<iframe src="https://player.bilibili.com/player.html?aid=934009168&bvid=BV1CT4y1d72D&cid=439145902&page=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"> </iframe>
-<p>-</p>
-<iframe src="https://player.bilibili.com/player.html?aid=634074968&bvid=BV12b4y187Jf&cid=439144208&page=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"> </iframe>
-<p>-</p>
-<iframe src="https://player.bilibili.com/player.html?aid=506602850&bvid=BV19g411K7xU&cid=439228336&page=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"> </iframe>
-<p>-</p>
-</audio>
-  </div>
-</div>  
+	<meta charset="UTF-8">
+	<title>网络词语翻译器</title>
+	<link rel="stylesheet" href="base.css">
+	<link rel="stylesheet" href="document.css">
+	<meta name="viewport" content="width=device-width,user-scalable=0">
+	<meta name="discription" content="拼音首字母缩写释义工具">
+</head>
+<body>
+	<div id="el">
+		<textarea v-model="text" placeholder="输入含有首字母缩写的文字" @input="nbnhhsh"></textarea>
+
+		<div class="nbnhhsh-box nbnhhsh-box-doc" v-if="show">
+			<div class="nbnhhsh-loading" v-if="loading">
+				加载中…
+			</div>
+			<div class="nbnhhsh-tag-list" v-else-if="tags.length">
+				<div class="nbnhhsh-tag-item" v-for="tag in tags">
+					<h4>{{tag.name}}</h4>
+					<div class="nbnhhsh-tran-list" v-if="tag.trans">
+						<span class="nbnhhsh-tran-item" v-for="tran in transArrange(tag.trans)">
+							{{tran.text}}<sub v-if="tran.sub">{{tran.sub}}</sub>
+						</span>
+					</div>
+					<div class="nbnhhsh-notran-box" v-else-if="tag.trans===null">
+						无对应文字
+					</div>
+					<div v-else-if="tag.inputting && tag.inputting.length !==0">
+						<div class="nbnhhsh-inputting-list">
+							<h5>有可能是</h5>
+							<span class="nbnhhsh-inputting-item" v-for="input in tag.inputting">{{input}}</span>
+						</div>
+					</div>
+					<div class="nbnhhsh-notran-box" v-else @click.prevent="submitTran(tag.name)">
+						尚未录入，我来提交对应文字
+					</div>
+					<a v-if="tag.trans!==null" @click.prevent="submitTran(tag.name)" class="nbnhhsh-add-btn" title="我来提交对应文字"></a>
+				</div>
+			</div>
+			<div class="nbnhhsh-loading" v-else>
+				没有匹配到拼音首字母缩写
+			</div>
+
+		</div>
+	</div>
+	<div class="content-box">
+		
+
+	<script src="https://cdn.bootcss.com/vue/2.6.11/vue.min.js"></script>
+	<script src="nbnhhsh.user.js"></script>
+	<script>
+		let guessTimer;
+		const app = new Vue({
+			el,
+			data: {
+				text:'',
+				tags:[],
+				show:false,
+				loading:false,
+			},
+			methods: {
+				...Nbnhhsh,
+				nbnhhsh(){
+					let text = this.text;
+
+					app.show = !!text && /[a-z0-9]/i.test(text);
+
+					clearTimeout(guessTimer);
+
+					if(!app.show){
+						return;
+					}
+
+					guessTimer = setTimeout(()=>{
+						this.guess(text,data=>{
+							if(!data.length){
+								app.show = false;
+							}else{
+								app.tags = data;
+							}
+						});
+					},400);
+
+					// location.hash = text?'#/text/'+encodeURIComponent(text):'';
+				}
+			}
+		});
+
+		const searchStringArray = location.hash.substr(2).split('/');
+
+		const Search = {};
+
+		for(let i = 0;i<searchStringArray.length;i+=2){
+			Search[decodeURIComponent(searchStringArray[i])] = decodeURIComponent(searchStringArray[i+1]);
+		}
+
+
+		app.text = Search.text || '';
+
+		app.nbnhhsh();
+
+
+		const loadScript = (src,el) =>{
+			el = document.createElement('script');
+			el.src = src;
+			document.body.appendChild(el);
+		};
+
+		setTimeout(()=>{
+			loadScript('//s4.cnzz.com/z_stat.php?id=1278706389&web_id=1278706389');
+		},400);
+	</script>
 </body>
 </html>
